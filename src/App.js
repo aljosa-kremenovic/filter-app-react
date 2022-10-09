@@ -1,47 +1,44 @@
-import "./App.css";
+import './App.css';
 import { useEffect, useState } from "react";
-import Axios from "axios";
-import Coin from "./components/Coin";
+import Movie from "./Movie";
+import Filter from './Filter';
+import { motion, AnimatePresence } from 'framer-motion';
+
 
 function App() {
-  const [listOfCoins, setListOfCoins] = useState([]);
-  const [searchWord, setSearchWord] = useState("");
+
+  const [popular, setPopular] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [activeGenre, setActiveGenre] = useState(0);
 
   useEffect(() => {
-    Axios.get("https://api.coinstats.app/public/v1/coins?skip=0").then(
-      (response) => {
-        setListOfCoins(response.data.coins);
-      }
-    );
+    fetchPopular();
   }, []);
 
-  const filteredCoins = listOfCoins.filter((coin) => {
-    return coin.name.toLowerCase().includes(searchWord.toLowerCase());
-  });
+  const fetchPopular = async () => {
+    const data = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=e410ee70227af5416306b8d274401a74&language=en-US&page=1`);
+    const movies = await data.json();
+    setPopular(movies.results);
+    setFiltered(movies.results);
+
+  }
 
   return (
     <div className="App">
-      <div className="cryptoHeader">
-        <input
-          type="text"
-          placeholder="Bitcoin..."
-          onChange={(event) => {
-            setSearchWord(event.target.value);
-          }}
-        />
-      </div>
-      <div className="cryptoDisplay">
-        {filteredCoins.map((coin) => {
-          return (
-            <Coin
-              name={coin.name}
-              icon={coin.icon}
-              price={coin.price}
-              symbol={coin.symbol}
-            />
-          );
+      <Filter 
+        popular={popular} 
+        setFiltered={setFiltered} 
+        activeGenre={activeGenre} 
+        setActiveGenre={setActiveGenre}/>
+      <motion.div 
+        layout 
+        className='popular-movies'>
+        <AnimatePresence>
+        {filtered.map(movie => {
+          return <Movie key={movie.id} movie={movie}/>;
         })}
-      </div>
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
